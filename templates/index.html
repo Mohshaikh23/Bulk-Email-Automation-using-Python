@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Email Automation</title>
+</head>
+<body>
+    <h1>Bulk Email Automation</h1>
+    <form action="{{ url_for('send_emails') }}" method="post" enctype="multipart/form-data">
+        <label for="sheet_id">Google Sheet ID:</label>
+        <input type="text" id="sheet_id" name="sheet_id" required><br><br>
+
+        <label for="sender_email">Sender Email:</label>
+        <input type="email" id="sender_email" name="sender_email" required><br><br>
+
+        <label for="subject">Email Subject:</label>
+        <input type="text" id="subject" name="subject" required><br><br>
+
+        <label for="credentials">Upload Credentials JSON:</label>
+        <input type="file" id="credentials" name="credentials" accept=".json" required><br><br>
+
+        <button type="submit">Send Emails</button>
+    </form>
+</body>
+</html>
