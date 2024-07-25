@@ -10,7 +10,7 @@ import pandas as pd
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with your secret key
+app.secret_key = ""  # Replace with your secret key
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
@@ -35,6 +35,9 @@ def send_emails():
 
     sheets_service = get_sheets_service(credentials_path)
     df = data_extractor(sheets_service, sheet_id)
+    
+    # Check data extraction
+    check_data_extraction(df)
 
     if df.empty:
         return "No data to send emails."
@@ -43,7 +46,12 @@ def send_emails():
     for index, row in df.iterrows():
         email = row['email']
         body = row['Message']
-        send_email(gmail_service, email, subject, body, sender_email)
+        print(f"Sending email to: {email}")  # Debugging
+        print(f"Message: {body}")  # Debugging
+        try:
+            send_email(gmail_service, email, subject, body, sender_email)
+        except Exception as e:
+            print(f"Failed to send email to {email}: {e}")  # Debugging
 
     os.remove(credentials_path)
     return "Emails sent successfully!"
@@ -84,6 +92,24 @@ def get_sheets_service(credentials_path):
     service = build('sheets', 'v4', credentials=creds)
     return service
 
+def check_data_extraction(df):
+    """
+    Function to check and print the extracted data from the DataFrame.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing the extracted data from Google Sheets.
+    
+    Returns:
+        None
+    """
+    if df.empty:
+        print("No data extracted from the Google Sheet.")
+    else:
+        print("Data extracted successfully:")
+        print(df.head())  # Print the first few rows of the DataFrame
+        print(f"Data Summary:\n{df.describe(include='all')}")  # Print a summary of the DataFrame
+
+
 def send_email(service, to, subject, body, sender):
     message = MIMEText(body)
     message['to'] = to
@@ -93,13 +119,13 @@ def send_email(service, to, subject, body, sender):
     message = {'raw': raw}
     try:
         sent_message = service.users().messages().send(userId='me', body=message).execute()
-        print('Message Id: %s' % sent_message['id'])
+        print(f'Message sent to {to}. Message Id: {sent_message["id"]}')
     except Exception as error:
-        print(f'An error occurred: {error}')
+        print(f'An error occurred while sending email to {to}: {error}')
 
 def data_extractor(service, sheet_id):
     sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=sheet_id, range='Sheet1').execute()
+    result = sheet.values().get(spreadsheetId=sheet_id, range='email trial').execute()
     values = result.get('values', [])
     if not values:
         print('No data found.')
